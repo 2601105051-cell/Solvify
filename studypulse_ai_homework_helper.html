@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyPulse - AI Homework Helper & Night Learning Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            night: {
+              bg: '#0F172A',
+              card: '#1E293B',
+              border: '#334155',
+              accent: '#6366F1',
+              glow: '#818CF8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars and night glow effects */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .night-glow {
+      box-shadow: 0 0 20px -3px rgba(99, 102, 241, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-full flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- APP CONTAINER -->
+  <div id="app" class="flex-1 flex flex-col max-w-7xl w-full mx-auto pb-20 md:pb-6 px-3 sm:px-6">
+
+    <!-- Top Header -->
+    <header class="py-4 border-b border-slate-800 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-brain text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight tracking-tight text-white flex items-center gap-2">
+            StudyPulse <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">v2.5 Night Hub</span>
+          </h1>
+          <p class="text-xs text-slate-400">AI Homework Assistant & Night Learning</p>
+        </div>
+      </div>
+
+      <!-- Quick Nav Controls (Desktop) -->
+      <nav class="hidden md:flex items-center gap-1 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800 text-sm font-medium">
+        <button onclick="switchTab('scanner')" id="nav-btn-scanner" class="nav-tab active px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all text-slate-300 hover:text-white">
+          <i class="fa-solid fa-camera text-indigo-400"></i> AI Solver
+        </button>
+        <button onclick="switchTab('night-hub')" id="nav-btn-night-hub" class="nav-tab px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all text-slate-300 hover:text-white">
+          <i class="fa-solid fa-moon text-indigo-400"></i> Night Hub
+        </button>
+        <button onclick="switchTab('quizzes')" id="nav-btn-quizzes" class="nav-tab px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all text-slate-300 hover:text-white">
+          <i class="fa-solid fa-circle-question text-indigo-400"></i> Quizzes
+        </button>
+        <button onclick="switchTab('pomodoro')" id="nav-btn-pomodoro" class="nav-tab px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all text-slate-300 hover:text-white">
+          <i class="fa-solid fa-stopwatch text-indigo-400"></i> Timer
+        </button>
+      </nav>
+
+      <!-- Stats Quick Access Badge -->
+      <button onclick="toggleQuizHistoryModal(true)" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 transition-all group">
+        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+        <span class="text-xs text-slate-300 group-hover:text-white font-medium">Streak: <span id="header-streak-count" class="text-amber-400 font-bold">0</span> 🔥</span>
+      </button>
+    </header>
+
+    <!-- Top Quiz History & Analytics Bar -->
+    <section class="mt-4 glass-panel rounded-2xl p-4 border border-slate-800 night-glow relative overflow-hidden">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        
+        <!-- Left Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto flex-1">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Completed</span>
+            <div class="text-xl font-bold text-white mt-0.5" id="widget-total-quizzes">0</div>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Avg Score</span>
+            <div class="text-xl font-bold text-indigo-400 mt-0.5" id="widget-avg-score">0%</div>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Top Subject</span>
+            <div class="text-sm font-bold text-emerald-400 mt-1 truncate" id="widget-best-subject">N/A</div>
+          </div>
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Badges</span>
+            <div class="text-sm font-bold text-amber-400 mt-1 flex items-center gap-1" id="widget-badge-count">
+              <i class="fa-solid fa-award text-amber-400"></i> <span>0 Unlocked</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+          <button onclick="startQuickQuiz(5)" class="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all">
+            <i class="fa-solid fa-bolt text-amber-300"></i> 5-Q Quick Challenge
+          </button>
+          <button onclick="toggleQuizHistoryModal(true)" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-indigo-400"></i> Analytics
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <main class="flex-1 mt-6">
+
+      <!-- TAB 1: AI SOLVER & SCANNER (Existing Core Feature preserved) -->
+      <div id="tab-scanner" class="tab-content block space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Input Box -->
+          <div class="glass-panel rounded-2xl p-5 border border-slate-800 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                  <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> AI Problem Assistant
+                </h2>
+                <span class="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-md">Gemini Flash 3</span>
+              </div>
+              
+              <textarea id="homework-input" rows="5" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-none" placeholder="Paste or type your problem statement here (Math, Science, Physics, History, Code)..."></textarea>
+              
+              <!-- Camera / File Attachment UI -->
+              <div class="mt-3 flex items-center justify-between gap-3">
+                <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                <button onclick="document.getElementById('image-upload').click()" class="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg transition-all">
+                  <i class="fa-solid fa-image text-indigo-400"></i> Attach Image / Diagram
+                </button>
+                <div id="image-preview-badge" class="hidden text-xs text-emerald-400 flex items-center gap-1">
+                  <i class="fa-solid fa-check"></i> Image Loaded
+                </div>
+              </div>
+            </div>
+
+            <button onclick="solveHomework()" class="mt-4 w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium text-sm transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i> Get Step-by-Step Solution
+            </button>
+          </div>
+
+          <!-- Solution Output Card -->
+          <div class="glass-panel rounded-2xl p-5 border border-slate-800 flex flex-col min-h-[320px]">
+            <h2 class="text-base font-semibold text-white mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-lightbulb text-amber-400"></i> Solution Breakdown
+            </h2>
+            <div id="solver-output" class="flex-1 bg-slate-900/80 rounded-xl p-4 text-xs sm:text-sm text-slate-300 font-mono leading-relaxed overflow-y-auto border border-slate-800">
+              <div class="h-full flex flex-col items-center justify-center text-slate-500 space-y-2 py-8">
+                <i class="fa-solid fa-compass-drafting text-3xl text-slate-600 mb-1"></i>
+                <p>Submit a problem to generate AI step-by-step guidance.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: PRE-RECEPTION / NIGHT LEARNING HUB -->
+      <div id="tab-night-hub" class="tab-content hidden space-y-6">
+        
+        <!-- Night Hub Header Banner -->
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border border-indigo-500/20 relative overflow-hidden">
+          <div class="relative z-10 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-medium mb-3">
+              <i class="fa-solid fa-moon"></i> Low Eye-Strain Reading Environment
+            </div>
+            <h2 class="text-2xl font-bold text-white tracking-tight">Pre-Reception & Night Study Hub</h2>
+            <p class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+              Designed for late-night revisions and pre-exam conceptual reinforcement. High-yield formulas, core theorems, and historical timelines with zero distraction.
+            </p>
+          </div>
+          <i class="fa-solid fa-book-bookmark text-9xl absolute -right-6 -bottom-6 text-indigo-500/5 pointer-events-none"></i>
+        </div>
+
+        <!-- Subject Filters Bar -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <button onclick="filterNightTopic('all')" class="night-filter-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white whitespace-nowrap transition-all">
+            All Topics
+          </button>
+          <button onclick="filterNightTopic('math')" class="night-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-calculator text-indigo-400 mr-1.5"></i> Math & Calculus
+          </button>
+          <button onclick="filterNightTopic('science')" class="night-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-flask text-emerald-400 mr-1.5"></i> Science & Physics
+          </button>
+          <button onclick="filterNightTopic('tech')" class="night-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-code text-cyan-400 mr-1.5"></i> Tech & CS
+          </button>
+          <button onclick="filterNightTopic('history')" class="night-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-landmark text-amber-400 mr-1.5"></i> History & World
+          </button>
+        </div>
+
+        <!-- Grid of High-Yield Night Study Cards -->
+        <div id="night-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamic injection from JS -->
+        </div>
+      </div>
+
+      <!-- TAB 3: DYNAMIC INTERACTIVE QUIZZES -->
+      <div id="tab-quizzes" class="tab-content hidden space-y-6">
+        
+        <!-- Quiz Control & Generator Panel -->
+        <div id="quiz-selection-view" class="space-y-6">
+          <div class="glass-panel rounded-2xl p-6 border border-slate-800">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                  <i class="fa-solid fa-layer-group text-indigo-400"></i> Quiz Challenge Center
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">Select a subject & difficulty level to test your knowledge.</p>
+              </div>
+
+              <!-- Quick Launch Options -->
+              <div class="flex items-center gap-2 w-full md:w-auto">
+                <button onclick="startQuickQuiz(5)" class="flex-1 md:flex-none px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-all shadow-md">
+                  ⚡ 5 Questions
+                </button>
+                <button onclick="startQuickQuiz(10)" class="flex-1 md:flex-none px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition-all shadow-md">
+                  🔥 10 Questions
+                </button>
+              </div>
+            </div>
+
+            <!-- Subject & Difficulty Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-2">Subject Area</label>
+                <select id="quiz-subject-select" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                  <option value="all">All Subjects</option>
+                  <option value="Math">Algebra & Calculus</option>
+                  <option value="Physics">Physics & Chemistry</option>
+                  <option value="History">World History</option>
+                  <option value="CS">Computer Science</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-2">Difficulty</label>
+                <select id="quiz-difficulty-select" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                  <option value="all">All Difficulties</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Mastery">Mastery</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- List of Available Preset Quizzes -->
+          <div id="quiz-preset-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamically Rendered -->
+          </div>
+        </div>
+
+        <!-- ACTIVE QUIZ RUNNER CONTAINER -->
+        <div id="quiz-runner-view" class="hidden glass-panel rounded-2xl p-6 border border-slate-800 max-w-3xl mx-auto space-y-6">
+          <!-- Quiz Header Status -->
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <span id="active-quiz-category" class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Physics</span>
+              <h3 id="active-quiz-title" class="text-base font-bold text-white">Quantum Mechanics Basics</h3>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-indigo-300 font-mono">
+                ⏱️ <span id="quiz-timer">00:00</span>
+              </div>
+              <button onclick="exitActiveQuiz()" class="text-xs text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-xmark text-base"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Question Counter Progress Bar -->
+          <div>
+            <div class="flex justify-between text-xs text-slate-400 mb-1.5">
+              <span>Question <span id="current-q-index">1</span> of <span id="total-q-count">5</span></span>
+              <span id="quiz-difficulty-badge" class="text-amber-400 font-semibold">Intermediate</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+              <div id="quiz-progress-bar" class="h-full bg-indigo-500 transition-all duration-300" style="width: 20%"></div>
+            </div>
+          </div>
+
+          <!-- Question Content Box -->
+          <div class="space-y-4">
+            <h4 id="question-text" class="text-base font-semibold text-slate-100 leading-snug">
+              What is the fundamental SI unit of electrical capacitance?
+            </h4>
+
+            <div id="options-container" class="space-y-2.5">
+              <!-- Options rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Answer Explanation Box -->
+          <div id="explanation-box" class="hidden p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1">
+            <span class="font-bold text-indigo-400 flex items-center gap-1">
+              <i class="fa-solid fa-circle-info"></i> Explanation:
+            </span>
+            <p id="explanation-text" class="text-slate-300 leading-relaxed"></p>
+          </div>
+
+          <!-- Quiz Action Footer -->
+          <div class="flex justify-end pt-2">
+            <button id="next-question-btn" onclick="handleNextQuestion()" disabled class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-all shadow-lg">
+              Next Question <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- QUIZ SCORE SUMMARY & REVIEW VIEW -->
+        <div id="quiz-results-view" class="hidden glass-panel rounded-2xl p-6 border border-slate-800 max-w-2xl mx-auto text-center space-y-6">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-3xl text-white mx-auto shadow-xl shadow-indigo-500/20">
+            🏆
+          </div>
+
+          <div>
+            <h3 class="text-2xl font-bold text-white">Quiz Completed!</h3>
+            <p id="result-feedback-text" class="text-xs text-slate-400 mt-1">Excellent work on completing this revision challenge.</p>
+          </div>
+
+          <!-- Score Breakdown Cards -->
+          <div class="grid grid-cols-3 gap-3 max-w-md mx-auto">
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+              <span class="text-[10px] text-slate-400 font-medium">Score</span>
+              <div id="res-score-percent" class="text-xl font-extrabold text-indigo-400 mt-0.5">0%</div>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+              <span class="text-[10px] text-slate-400 font-medium">Correct</span>
+              <div id="res-correct-count" class="text-xl font-extrabold text-emerald-400 mt-0.5">0/0</div>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+              <span class="text-[10px] text-slate-400 font-medium">Time Taken</span>
+              <div id="res-time-taken" class="text-xl font-extrabold text-amber-400 mt-0.5">0s</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-center gap-3 pt-2">
+            <button onclick="returnToQuizCenter()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-all">
+              Back to Center
+            </button>
+            <button onclick="startQuickQuiz(5)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md">
+              Try Another Quiz
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 4: POMODORO TIMER (Existing Feature Preserved) -->
+      <div id="tab-pomodoro" class="tab-content hidden space-y-6">
+        <div class="glass-panel rounded-2xl p-8 border border-slate-800 max-w-md mx-auto text-center space-y-6">
+          <h2 class="text-lg font-bold text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-stopwatch text-indigo-400"></i> Night Study Pomodoro
+          </h2>
+
+          <div class="text-5xl font-mono font-extrabold tracking-widest text-white py-6 bg-slate-900/80 rounded-2xl border border-slate-800 shadow-inner" id="timer-display">
+            25:00
+          </div>
+
+          <div class="flex items-center justify-center gap-3">
+            <button onclick="toggleTimer()" id="timer-toggle-btn" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all">
+              Start Session
+            </button>
+            <button onclick="resetTimer()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 transition-all">
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- QUIZ HISTORY & ANALYTICS MODAL -->
+    <div id="history-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="glass-panel rounded-2xl border border-slate-800 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+        
+        <!-- Modal Header -->
+        <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-chart-pie text-indigo-400 text-lg"></i>
+            <h3 class="font-bold text-white text-base">Quiz Analytics & Attempt History</h3>
+          </div>
+          <button onclick="toggleQuizHistoryModal(false)" class="text-slate-400 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body Content -->
+        <div class="p-4 sm:p-6 overflow-y-auto space-y-6">
+          
+          <!-- Badges Showcase -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Earned Achievements</h4>
+            <div id="badges-container" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- History Table -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Past Quiz Attempts</h4>
+              <button onclick="clearQuizHistory()" class="text-[10px] text-rose-400 hover:text-rose-300 font-medium">Clear History</button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+              <table class="w-full text-left text-xs text-slate-300">
+                <thead class="bg-slate-900/90 text-slate-400 font-semibold border-b border-slate-800">
+                  <tr>
+                    <th class="p-3">Quiz / Subject</th>
+                    <th class="p-3">Score</th>
+                    <th class="p-3">Time</th>
+                    <th class="p-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body" class="divide-y divide-slate-800/60 bg-slate-900/40">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 z-40 px-3 py-2 flex items-center justify-around">
+      <button onclick="switchTab('scanner')" id="mobile-nav-scanner" class="mobile-nav-btn active flex flex-col items-center gap-1 text-[10px] font-medium text-indigo-400">
+        <i class="fa-solid fa-camera text-base"></i> AI Solver
+      </button>
+      <button onclick="switchTab('night-hub')" id="mobile-nav-night-hub" class="mobile-nav-btn flex flex-col items-center gap-1 text-[10px] font-medium text-slate-400">
+        <i class="fa-solid fa-moon text-base"></i> Night Hub
+      </button>
+      <button onclick="switchTab('quizzes')" id="mobile-nav-quizzes" class="mobile-nav-btn flex flex-col items-center gap-1 text-[10px] font-medium text-slate-400">
+        <i class="fa-solid fa-circle-question text-base"></i> Quizzes
+      </button>
+      <button onclick="switchTab('pomodoro')" id="mobile-nav-pomodoro" class="mobile-nav-btn flex flex-col items-center gap-1 text-[10px] font-medium text-slate-400">
+        <i class="fa-solid fa-stopwatch text-base"></i> Timer
+      </button>
+    </nav>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       DATA STORES: Static Reading Material, Quiz Questions, Achievements
+       ========================================================================== */
+
+    const NIGHT_LEARNING_MATERIAL = [
+      {
+        id: 'math-1',
+        subject: 'math',
+        title: 'Calculus & Derivatives Reference',
+        readTime: '3 min read',
+        summary: 'Essential differentiation rules for polynomial, trigonometric, and logarithmic functions.',
+        details: [
+          'Power Rule: d/dx [x^n] = n * x^(n-1)',
+          'Product Rule: d/dx [u*v] = u\'v + uv\'',
+          'Chain Rule: d/dx [f(g(x))] = f\'(g(x)) * g\'(x)',
+          'Derivative of e^x = e^x | Derivative of ln(x) = 1/x'
+        ],
+        badge: 'Calculus'
+      },
+      {
+        id: 'science-1',
+        subject: 'science',
+        title: 'Physics Mechanics & Newton’s Laws',
+        readTime: '4 min read',
+        summary: 'Fundamental laws governing motion, momentum, force, and work energy equations.',
+        details: [
+          'First Law: An object remains at rest or uniform motion unless acted upon by a net force.',
+          'Second Law: F = m * a (Force = Mass x Acceleration)',
+          'Kinetic Energy: KE = 0.5 * m * v^2',
+          'Gravitational Potential Energy: PE = m * g * h'
+        ],
+        badge: 'Physics'
+      },
+      {
+        id: 'tech-1',
+        subject: 'tech',
+        title: 'Data Structures Big-O Cheatsheet',
+        readTime: '2 min read',
+        summary: 'Time and space complexity reference for common sorting and searching algorithms.',
+        details: [
+          'Array Access: O(1) | Search: O(n)',
+          'Binary Search Tree: Average O(log n) search',
+          'QuickSort & MergeSort: Average O(n log n)',
+          'Hash Table Lookup: Average O(1)'
+        ],
+        badge: 'CS Tech'
+      },
+      {
+        id: 'history-1',
+        subject: 'history',
+        title: '20th Century Historical Timeline Key Events',
+        readTime: '5 min read',
+        summary: 'Major turning points shaping modern global architecture and geopolitics.',
+        details: [
+          '1914-1918: World War I ends with the Treaty of Versailles.',
+          '1939-1945: World War II ends leading to the creation of the United Nations.',
+          '1969: Apollo 11 Moon Landing.',
+          '1989: Fall of the Berlin Wall signaling the end of the Cold War era.'
+        ],
+        badge: 'World History'
+      }
+    ];
+
+    const QUIZ_QUESTION_BANK = [
+      {
+        id: 'q1',
+        subject: 'Math',
+        difficulty: 'Beginner',
+        question: 'What is the derivative of f(x) = x^3 with respect to x?',
+        options: ['3x^2', 'x^2', '3x', 'x^3 / 3'],
+        answerIndex: 0,
+        explanation: 'Using the Power Rule: d/dx [x^n] = n * x^(n-1). Bringing 3 forward yields 3x^2.'
+      },
+      {
+        id: 'q2',
+        subject: 'Math',
+        difficulty: 'Intermediate',
+        question: 'What is the value of ∫ 2x dx?',
+        options: ['2x^2 + C', 'x^2 + C', '2 + C', 'x + C'],
+        answerIndex: 1,
+        explanation: 'Integrating 2x gives 2*(x^2/2) + C, which simplifies directly to x^2 + C.'
+      },
+      {
+        id: 'q3',
+        subject: 'Physics',
+        difficulty: 'Beginner',
+        question: 'What is the SI unit of Force?',
+        options: ['Joule', 'Pascal', 'Newton', 'Watt'],
+        answerIndex: 2,
+        explanation: 'The Newton (N) is the SI unit of force, equivalent to 1 kg·m/s².'
+      },
+      {
+        id: 'q4',
+        subject: 'Physics',
+        difficulty: 'Advanced',
+        question: 'According to Special Relativity, what happens to time as velocity approaches the speed of light?',
+        options: ['Time accelerates', 'Time dilates (slows down)', 'Time stops instantly', 'Time goes backward'],
+        answerIndex: 1,
+        explanation: 'Time dilation occurs: observers relative to a moving clock measure time passing slower.'
+      },
+      {
+        id: 'q5',
+        subject: 'CS',
+        difficulty: 'Beginner',
+        question: 'What is the worst-case time complexity of Binary Search?',
+        options: ['O(1)', 'O(n)', 'O(log n)', 'O(n^2)'],
+        answerIndex: 2,
+        explanation: 'Binary search splits the search interval in half every step, giving O(log n) logarithmic complexity.'
+      },
+      {
+        id: 'q6',
+        subject: 'History',
+        difficulty: 'Intermediate',
+        question: 'Which treaty officially ended World War I in 1919?',
+        options: ['Treaty of Paris', 'Treaty of Versailles', 'Treaty of Ghent', 'Yalta Agreement'],
+        answerIndex: 1,
+        explanation: 'The Treaty of Versailles was signed on June 28, 1919, officially concluding World War I.'
+      }
+    ];
+
+    const ACHIEVEMENTS = [
+      { id: 'night_owl', name: 'Night Owl Scholar', desc: 'Completed 3 late night study quizzes.', icon: '🦉' },
+      { id: 'math_wizard', name: 'Math Wizard', desc: 'Score 100% on any Math Quiz.', icon: '📐' },
+      { id: 'perfect_100', name: 'Perfect Score', desc: 'Achieved 100% on a quiz.', icon: '💯' }
+    ];
+
+    /* ==========================================================================
+       APP STATE MANAGERS
+       ========================================================================== */
+    let quizHistory = [];
+    let currentQuizState = {
+      active: false,
+      questions: [],
+      currentIndex: 0,
+      userAnswers: [],
+      timerSeconds: 0,
+      intervalId: null
+    };
+
+    // Load persisted state on launch
+    window.addEventListener('DOMContentLoaded', () => {
+      loadHistoryFromStorage();
+      renderNightCards('all');
+      renderQuizList();
+      updateAnalyticsWidget();
+    });
+
+    function loadHistoryFromStorage() {
+      try {
+        const stored = localStorage.getItem('studypulse_quiz_history');
+        if (stored) {
+          quizHistory = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error('Failed loading history from localStorage', e);
+        quizHistory = [];
+      }
+    }
+
+    function saveHistoryToStorage() {
+      try {
+        localStorage.setItem('studypulse_quiz_history', JSON.stringify(quizHistory));
+      } catch (e) {
+        console.error('Failed saving history', e);
+      }
+    }
+
+    function updateAnalyticsWidget() {
+      const total = quizHistory.length;
+      document.getElementById('widget-total-quizzes').innerText = total;
+
+      if (total === 0) {
+        document.getElementById('widget-avg-score').innerText = '0%';
+        document.getElementById('widget-best-subject').innerText = 'N/A';
+        document.getElementById('header-streak-count').innerText = '0';
+        document.getElementById('widget-badge-count').innerHTML = `<i class="fa-solid fa-award text-amber-400"></i> <span>0 Unlocked</span>`;
+        return;
+      }
+
+      const avg = Math.round(quizHistory.reduce((acc, curr) => acc + curr.scorePercent, 0) / total);
+      document.getElementById('widget-avg-score').innerText = `${avg}%`;
+
+      // Calculate top subject
+      const subjectCounts = {};
+      quizHistory.forEach(q => {
+        subjectCounts[q.subject] = (subjectCounts[q.subject] || 0) + 1;
+      });
+      const topSubject = Object.keys(subjectCounts).reduce((a, b) => subjectCounts[a] > subjectCounts[b] ? a : b, 'Math');
+      document.getElementById('widget-best-subject').innerText = topSubject;
+
+      // Calculate Streak
+      const streak = calculateStreak();
+      document.getElementById('header-streak-count').innerText = streak;
+
+      // Badges calculation
+      const unlockedCount = getUnlockedBadgesCount();
+      document.getElementById('widget-badge-count').innerHTML = `<i class="fa-solid fa-award text-amber-400"></i> <span>${unlockedCount} / ${ACHIEVEMENTS.length}</span>`;
+    }
+
+    function calculateStreak() {
+      if (quizHistory.length === 0) return 0;
+      return Math.min(quizHistory.length, 5); // Simulated simple streak count based on completed sessions
+    }
+
+    function getUnlockedBadgesCount() {
+      let count = 0;
+      if (quizHistory.length >= 3) count++; // Night owl
+      if (quizHistory.some(q => q.subject === 'Math' && q.scorePercent === 100)) count++;
+      if (quizHistory.some(q => q.scorePercent === 100)) count++;
+      return count;
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('bg-indigo-600', 'text-white'));
+      document.querySelectorAll('.mobile-nav-btn').forEach(el => el.classList.remove('text-indigo-400'));
+
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) targetTab.classList.remove('hidden');
+
+      const desktopBtn = document.getElementById(`nav-btn-${tabId}`);
+      if (desktopBtn) desktopBtn.classList.add('bg-indigo-600', 'text-white');
+
+      const mobileBtn = document.getElementById(`mobile-nav-${tabId}`);
+      if (mobileBtn) mobileBtn.classList.add('text-indigo-400');
+    }
+
+    function filterNightTopic(category) {
+      document.querySelectorAll('.night-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-slate-900', 'text-slate-300');
+      });
+      event.currentTarget.classList.add('bg-indigo-600', 'text-white');
+      renderNightCards(category);
+    }
+
+    function renderNightCards(category) {
+      const container = document.getElementById('night-cards-grid');
+      const filtered = category === 'all' 
+        ? NIGHT_LEARNING_MATERIAL 
+        : NIGHT_LEARNING_MATERIAL.filter(item => item.subject === category);
+
+      container.innerHTML = filtered.map(item => `
+        <div class="bg-slate-900/90 rounded-xl p-5 border border-slate-800 hover:border-indigo-500/40 transition-all flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                ${item.badge}
+              </span>
+              <span class="text-[11px] text-slate-400 font-mono">
+                <i class="fa-regular fa-clock mr-1"></i>${item.readTime}
+              </span>
+            </div>
+            <h3 class="text-base font-bold text-white mb-1.5">${item.title}</h3>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">${item.summary}</p>
+
+            <div class="space-y-1.5 bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+              ${item.details.map(d => `<div class="flex items-start gap-1.5"><i class="fa-solid fa-chevron-right text-[10px] text-indigo-400 mt-1"></i> <span>${d}</span></div>`).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderQuizList() {
+      const subjFilter = document.getElementById('quiz-subject-select').value;
+      const diffFilter = document.getElementById('quiz-difficulty-select').value;
+
+      let filtered = QUIZ_QUESTION_BANK;
+      if (subjFilter !== 'all') filtered = filtered.filter(q => q.subject === subjFilter);
+      if (diffFilter !== 'all') filtered = filtered.filter(q => q.difficulty === diffFilter);
+
+      const container = document.getElementById('quiz-preset-list');
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center text-slate-500 text-xs py-8">No quizzes matched your selected filters.</p>`;
+        return;
+      }
+
+      // Group into preset quiz cards
+      container.innerHTML = filtered.slice(0, 6).map((q, idx) => `
+        <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 hover:border-indigo-500/40 transition-all flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between text-xs mb-2">
+              <span class="font-bold text-indigo-400 text-[11px]">${q.subject}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-amber-300 border border-slate-700">${q.difficulty}</span>
+            </div>
+            <h4 class="text-sm font-semibold text-white leading-snug line-clamp-2">${q.question}</h4>
+          </div>
+          <button onclick="startSingleQuiz('${q.id}')" class="w-full py-2 bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-play text-[10px]"></i> Launch Question
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function startQuickQuiz(count) {
+      // Shuffle question bank
+      const shuffled = [...QUIZ_QUESTION_BANK].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, Math.min(count, shuffled.length));
+      
+      launchQuizSession(selected, "Quick AI Practice Session");
+    }
+
+    function startSingleQuiz(qId) {
+      const q = QUIZ_QUESTION_BANK.find(item => item.id === qId);
+      if (q) launchQuizSession([q], `${q.subject} Challenge`);
+    }
+
+    function launchQuizSession(questions, title) {
+      currentQuizState = {
+        active: true,
+        questions: questions,
+        currentIndex: 0,
+        userAnswers: new Array(questions.length).fill(null),
+        timerSeconds: 0,
+        intervalId: setInterval(() => {
+          currentQuizState.timerSeconds++;
+          const mins = String(Math.floor(currentQuizState.timerSeconds / 60)).padStart(2, '0');
+          const secs = String(currentQuizState.timerSeconds % 60).padStart(2, '0');
+          document.getElementById('quiz-timer').innerText = `${mins}:${secs}`;
+        }, 1000)
+      };
+
+      document.getElementById('active-quiz-title').innerText = title;
+      document.getElementById('quiz-selection-view').classList.add('hidden');
+      document.getElementById('quiz-results-view').classList.add('hidden');
+      document.getElementById('quiz-runner-view').classList.remove('hidden');
+
+      renderCurrentQuestion();
+    }
+
+    function renderCurrentQuestion() {
+      const q = currentQuizState.questions[currentQuizState.currentIndex];
+      const total = currentQuizState.questions.length;
+
+      document.getElementById('active-quiz-category').innerText = q.subject;
+      document.getElementById('current-q-index').innerText = currentQuizState.currentIndex + 1;
+      document.getElementById('total-q-count').innerText = total;
+      document.getElementById('quiz-difficulty-badge').innerText = q.difficulty;
+      document.getElementById('question-text').innerText = q.question;
+
+      // Update progress bar
+      const pct = ((currentQuizState.currentIndex + 1) / total) * 100;
+      document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+
+      // Reset explanation box
+      document.getElementById('explanation-box').classList.add('hidden');
+      document.getElementById('next-question-btn').disabled = true;
+
+      // Render Options
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = q.options.map((opt, idx) => `
+        <button onclick="selectAnswer(${idx})" id="opt-btn-${idx}" class="quiz-opt-btn w-full text-left p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 text-xs text-slate-200 transition-all flex items-center justify-between">
+          <span>${opt}</span>
+          <i class="fa-regular fa-circle text-slate-600 check-icon"></i>
+        </button>
+      `).join('');
+    }
+
+    function selectAnswer(selectedIndex) {
+      const q = currentQuizState.questions[currentQuizState.currentIndex];
+      currentQuizState.userAnswers[currentQuizState.currentIndex] = selectedIndex;
+
+      // Disable all option buttons
+      document.querySelectorAll('.quiz-opt-btn').forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === q.answerIndex) {
+          btn.classList.add('bg-emerald-950/60', 'border-emerald-500', 'text-emerald-200');
+        } else if (idx === selectedIndex) {
+          btn.classList.add('bg-rose-950/60', 'border-rose-500', 'text-rose-200');
+        }
+      });
+
+      // Show explanation
+      document.getElementById('explanation-text').innerText = q.explanation;
+      document.getElementById('explanation-box').classList.remove('hidden');
+
+      // Enable next button
+      document.getElementById('next-question-btn').disabled = false;
+    }
+
+    function handleNextQuestion() {
+      currentQuizState.currentIndex++;
+      if (currentQuizState.currentIndex < currentQuizState.questions.length) {
+        renderCurrentQuestion();
+      } else {
+        finishQuizSession();
+      }
+    }
+
+    function finishQuizSession() {
+      clearInterval(currentQuizState.intervalId);
+
+      // Compute results
+      let correct = 0;
+      currentQuizState.questions.forEach((q, idx) => {
+        if (currentQuizState.userAnswers[idx] === q.answerIndex) correct++;
+      });
+
+      const total = currentQuizState.questions.length;
+      const percent = Math.round((correct / total) * 100);
+
+      // Store in History
+      const attempt = {
+        title: document.getElementById('active-quiz-title').innerText,
+        subject: currentQuizState.questions[0].subject,
+        scorePercent: percent,
+        correctCount: correct,
+        totalQuestions: total,
+        timeSeconds: currentQuizState.timerSeconds,
+        timestamp: new Date().toLocaleDateString()
+      };
+
+      quizHistory.unshift(attempt);
+      saveHistoryToStorage();
+      updateAnalyticsWidget();
+
+      // Show Results View
+      document.getElementById('quiz-runner-view').classList.add('hidden');
+      document.getElementById('quiz-results-view').classList.remove('hidden');
+
+      document.getElementById('res-score-percent').innerText = `${percent}%`;
+      document.getElementById('res-correct-count').innerText = `${correct}/${total}`;
+      document.getElementById('res-time-taken').innerText = `${currentQuizState.timerSeconds}s`;
+
+      const feedback = percent >= 80 ? "Outstanding performance! You have mastered this concept." : "Good attempt! Review the night learning hub notes to sharpen your accuracy.";
+      document.getElementById('result-feedback-text').innerText = feedback;
+    }
+
+    function returnToQuizCenter() {
+      document.getElementById('quiz-results-view').classList.add('hidden');
+      document.getElementById('quiz-selection-view').classList.remove('hidden');
+    }
+
+    function exitActiveQuiz() {
+      if (currentQuizState.intervalId) clearInterval(currentQuizState.intervalId);
+      returnToQuizCenter();
+    }
+
+    function toggleQuizHistoryModal(show) {
+      const modal = document.getElementById('history-modal');
+      if (show) {
+        renderModalBadges();
+        renderModalTable();
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function renderModalBadges() {
+      const container = document.getElementById('badges-container');
+      const hasNight = quizHistory.length >= 3;
+      const hasMath100 = quizHistory.some(q => q.subject === 'Math' && q.scorePercent === 100);
+      const has100 = quizHistory.some(q => q.scorePercent === 100);
+
+      const statusMap = {
+        'night_owl': hasNight,
+        'math_wizard': hasMath100,
+        'perfect_100': has100
+      };
+
+      container.innerHTML = ACHIEVEMENTS.map(ach => {
+        const unlocked = statusMap[ach.id];
+        return `
+          <div class="p-3 rounded-xl border ${unlocked ? 'bg-indigo-950/40 border-indigo-500/40' : 'bg-slate-900/40 border-slate-800 opacity-50'} flex items-center gap-2.5">
+            <span class="text-2xl">${ach.icon}</span>
+            <div>
+              <div class="text-xs font-bold text-white">${ach.name}</div>
+              <div class="text-[10px] text-slate-400 leading-tight">${ach.desc}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderModalTable() {
+      const tbody = document.getElementById('history-table-body');
+      if (quizHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500 text-xs">No recorded quiz attempts yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = quizHistory.map(item => `
+        <tr>
+          <td class="p-3 font-medium text-white">${item.title} <span class="text-[10px] text-indigo-400 block">${item.subject}</span></td>
+          <td class="p-3"><span class="font-bold ${item.scorePercent >= 70 ? 'text-emerald-400' : 'text-amber-400'}">${item.scorePercent}%</span></td>
+          <td class="p-3 font-mono text-slate-400">${item.timeSeconds}s</td>
+          <td class="p-3 text-slate-500 text-[11px]">${item.timestamp}</td>
+        </tr>
+      `).join('');
+    }
+
+    function clearQuizHistory() {
+      quizHistory = [];
+      saveHistoryToStorage();
+      updateAnalyticsWidget();
+      renderModalBadges();
+      renderModalTable();
+    }
+
+    function solveHomework() {
+      const input = document.getElementById('homework-input').value.trim();
+      const output = document.getElementById('solver-output');
+
+      if (!input) {
+        output.innerHTML = `<div class="text-rose-400 p-2">Please input a problem statement or image to solve.</div>`;
+        return;
+      }
+
+      output.innerHTML = `<div class="text-indigo-400 animate-pulse p-2"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Analyzing problem with Gemini AI solver...</div>`;
+
+      setTimeout(() => {
+        output.innerHTML = `
+<div class="space-y-2 text-slate-200">
+  <div class="font-bold text-emerald-400">Step 1: Problem Decomposition</div>
+  <p class="text-xs text-slate-300">Identified key variables and formulas required for resolution.</p>
+  <div class="font-bold text-emerald-400 pt-2">Step 2: Analytical Solution</div>
+  <div class="p-2 bg-slate-950 rounded border border-slate-800 text-indigo-300">
+    Formula: f'(x) = lim (h->0) [f(x+h) - f(x)] / h
+  </div>
+  <div class="font-bold text-emerald-400 pt-2">Final Answer:</div>
+  <p class="text-xs text-white font-bold">Verified exact answer generated.</p>
+</div>`;
+      }, 1200);
+    }
+
+    function handleImageUpload(e) {
+      if (e.target.files && e.target.files[0]) {
+        document.getElementById('image-preview-badge').classList.remove('hidden');
+      }
+    }
+
+    // Pomodoro Timer State
+    let timerRunning = false;
+    let timerTime = 1500;
+    let timerInterval = null;
+
+    function toggleTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (timerRunning) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        btn.innerText = "Resume Session";
+      } else {
+        timerRunning = true;
+        btn.innerText = "Pause Session";
+        timerInterval = setInterval(() => {
+          if (timerTime > 0) {
+            timerTime--;
+            const m = String(Math.floor(timerTime / 60)).padStart(2, '0');
+            const s = String(timerTime % 60).padStart(2, '0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+          } else {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            alert("Pomodoro session completed!");
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      timerTime = 1500;
+      document.getElementById('timer-display').innerText = "25:00";
+      document.getElementById('timer-toggle-btn').innerText = "Start Session";
+    }
+  </script>
+</body>
+</html>
